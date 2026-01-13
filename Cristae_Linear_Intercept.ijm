@@ -67,7 +67,8 @@ macro "Phase 1 - Batch Prep [F1]" {
     
     nROIs = roiManager("count");
     startTime = getTime();
-    
+    processedCount = 0;
+
     for (i = 0; i < nROIs; i++) {
         // Force garbage collection every 50 ROIs
         if (i > 0 && i % 50 == 0) {
@@ -99,6 +100,7 @@ macro "Phase 1 - Batch Prep [F1]" {
         }
         
         print("Processing " + (i + 1) + "/" + nROIs + ": " + roiName);
+        processedCount++;
         
         Roi.getBounds(rx, ry, rw, rh);
         if (rw == 0 || rh == 0) {
@@ -149,7 +151,7 @@ macro "Phase 1 - Batch Prep [F1]" {
             selectImage(cropID);  // Make sure crop is selected
             run("Trainable Weka Segmentation");
             wait(2000);  // Give Weka time to initialize
-            
+
             wekaTitle = findWindowByPattern("Trainable Weka");
             if (wekaTitle == "") {
                 print("  ERROR: Weka failed to open");
@@ -157,12 +159,38 @@ macro "Phase 1 - Batch Prep [F1]" {
             }
             
             selectWindow(wekaTitle);
-            wait(200);
             
             // Load classifier
             print("  Loading classifier...");
+            logBefore = getInfo("log");
+            logLenBefore = lengthOf(logBefore);
             call("trainableSegmentation.Weka_Segmentation.loadClassifier", CLASSIFIER_PATH);
-            wait(3000);  // Wait longer for classifier to fully initialize (was 1500ms)
+
+            // Poll for classifier to finish loading (log shows "Loaded" when done)
+            maxWait = 10000;  // 10 second max (safety)
+            pollInterval = 100;  // Check every 100ms
+            waited = 0;
+            classifierLoaded = false;
+            while (waited < maxWait && !classifierLoaded) {
+                wait(pollInterval);
+                waited += pollInterval;
+                logNow = getInfo("log");
+                if (lengthOf(logNow) > logLenBefore) {
+                    newLogContent = substring(logNow, logLenBefore);
+                    if (indexOf(newLogContent, "Loaded") >= 0) {
+                        classifierLoaded = true;
+                    }
+                }
+            }
+            if (!classifierLoaded) {
+                print("  WARNING: Classifier load timeout, restarting Weka...");
+                wekaTitle = findWindowByPattern("Trainable Weka");
+                if (wekaTitle != "") {
+                    selectWindow(wekaTitle);
+                    close();
+                }
+                continue;  // Retry from the beginning of the attempt loop
+            }
             
             // Apply classifier to get probability
             print("  Applying classifier...");
@@ -229,33 +257,27 @@ macro "Phase 1 - Batch Prep [F1]" {
         print(metaFile, "roi_index=" + i);
         File.close(metaFile);
         
-        // Cleanup - CRITICAL: properly close Weka to free memory
-        wait(100);
-        
+        // Cleanup - close Weka to free memory
         // Close the Weka segmentation window
         wekaTitle = findWindowByPattern("Trainable Weka");
         if (wekaTitle != "") {
             selectWindow(wekaTitle);
-            wait(50);
             close();
-            wait(200);
         }
-        
+
         // Close any remaining probability windows
         probWindow = findWindowByPattern("Probability");
         while (probWindow != "") {
             selectWindow(probWindow);
             close();
-            wait(50);
             probWindow = findWindowByPattern("Probability");
         }
-        
+
         // Close any remaining Weka windows (duplicates can happen)
         wekaTitle = findWindowByPattern("Trainable Weka");
         while (wekaTitle != "") {
             selectWindow(wekaTitle);
             close();
-            wait(100);
             wekaTitle = findWindowByPattern("Trainable Weka");
         }
         
@@ -264,10 +286,10 @@ macro "Phase 1 - Batch Prep [F1]" {
         
         // Force garbage collection after EVERY ROI to prevent memory buildup
         run("Collect Garbage");
-        wait(100);
         
         elapsed = (getTime() - startTime) / 1000;
-        remaining = (elapsed / (i + 1)) * (nROIs - i - 1);
+        avgTime = elapsed / processedCount;
+        remaining = avgTime * (nROIs - i - 1);
         print("  Done. ~" + round(remaining) + "s remaining");
     }
     
