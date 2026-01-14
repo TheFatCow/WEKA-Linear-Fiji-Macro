@@ -1,0 +1,6 @@
+roi_name=02131-07673
+roi_index=215
+offset_x=20
+offset_y=20
+roi_width=370
+roi_height=458

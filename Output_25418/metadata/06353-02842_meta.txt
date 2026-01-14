@@ -1,0 +1,6 @@
+roi_name=06353-02842
+roi_index=40
+offset_x=20
+offset_y=20
+roi_width=304
+roi_height=426

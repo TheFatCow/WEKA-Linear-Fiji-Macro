@@ -1,0 +1,5 @@
+offset_x=20
+offset_y=20
+roi_width=196
+roi_height=340
+roi_index=960

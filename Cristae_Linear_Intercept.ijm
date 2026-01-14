@@ -490,7 +490,9 @@ macro "Phase 2 - Analyze [F2]" {
             Overlay.show();
         }
         
-        // Interaction
+        // Interaction - clear selection on BOTH images so user can draw on either
+        selectImage(probID);
+        run("Select None");
         selectImage(rawID);
         run("Select None");
         setTool("line");
@@ -567,8 +569,11 @@ function analyzeROI(rawID, probID, roiName, idx, total, thresh, roiIndex, offset
     lineNum = 0;
     
     while (true) {
-        // Dialog to draw line
+        // Clear any existing selections on both images before drawing
+        selectImage(probID);
+        run("Select None");
         selectImage(rawID);
+        run("Select None");
         setTool("line");
         
         Dialog.createNonBlocking("[" + (idx+1) + "/" + total + "] " + roiName);

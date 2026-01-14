@@ -1,0 +1,6 @@
+roi_name=03633-11127
+roi_index=262
+offset_x=20
+offset_y=20
+roi_width=170
+roi_height=282

@@ -1,0 +1,6 @@
+roi_name=00690-09549
+roi_index=228
+offset_x=20
+offset_y=20
+roi_width=222
+roi_height=256

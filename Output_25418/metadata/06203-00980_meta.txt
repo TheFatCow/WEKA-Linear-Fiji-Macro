@@ -1,0 +1,6 @@
+roi_name=06203-00980
+roi_index=31
+offset_x=20
+offset_y=20
+roi_width=320
+roi_height=202

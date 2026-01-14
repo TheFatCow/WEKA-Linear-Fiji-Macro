@@ -1,0 +1,6 @@
+roi_name=02606-06476
+roi_index=216
+offset_x=20
+offset_y=20
+roi_width=100
+roi_height=196

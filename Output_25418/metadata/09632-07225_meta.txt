@@ -1,0 +1,6 @@
+roi_name=09632-07225
+roi_index=166
+offset_x=20
+offset_y=20
+roi_width=298
+roi_height=104

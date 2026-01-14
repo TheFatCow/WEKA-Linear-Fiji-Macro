@@ -1,0 +1,6 @@
+roi_name=07774-08564
+roi_index=195
+offset_x=20
+offset_y=20
+roi_width=488
+roi_height=328

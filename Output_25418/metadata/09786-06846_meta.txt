@@ -1,0 +1,6 @@
+roi_name=09786-06846
+roi_index=163
+offset_x=20
+offset_y=20
+roi_width=272
+roi_height=168

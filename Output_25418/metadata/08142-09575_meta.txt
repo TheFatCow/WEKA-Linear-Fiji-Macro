@@ -1,0 +1,6 @@
+roi_name=08142-09575
+roi_index=189
+offset_x=20
+offset_y=20
+roi_width=198
+roi_height=264
