@@ -439,19 +439,35 @@ macro "Phase 2 - Analyze [F2]" {
             if (measuredArea > 0) roiArea = measuredArea;
         }
         
-        // Get image dimensions and scale window size
+        // Get image dimensions and scale window size dynamically
         selectImage(rawID);
         imgW = getWidth();
         imgH = getHeight();
-        
-        // Scale to fit nicely - minimum 300, maximum 500
-        scale = 2.5;  // magnification factor
+
+        // Dynamic scaling based on crop size
+        // Larger crops need MORE magnification since cristae appear relatively smaller
+        maxDim = maxOf(imgW, imgH);
+        if (maxDim < 150) {
+            scale = 2.5;       // Small crops: keep standard magnification
+        } else if (maxDim < 250) {
+            scale = 3.0;       // Medium crops
+        } else if (maxDim < 400) {
+            scale = 3.5;       // Large crops: need more zoom to see cristae
+        } else {
+            scale = 4.0;       // Very large crops: cristae are relatively tiny
+        }
+
         winW = imgW * scale;
         winH = imgH * scale;
-        if (winW < 300) winW = 300;
-        if (winH < 300) winH = 300;
-        if (winW > 500) winW = 500;
-        if (winH > 500) winH = 500;
+
+        // Set reasonable bounds
+        minWinSize = 300;
+        maxWinSize = 900;  // Cap to avoid taking over the screen
+
+        if (winW < minWinSize) winW = minWinSize;
+        if (winH < minWinSize) winH = minWinSize;
+        if (winW > maxWinSize) winW = maxWinSize;
+        if (winH > maxWinSize) winH = maxWinSize;
         
         // Position windows
         selectImage(rawID);
@@ -574,9 +590,20 @@ function analyzeROI(rawID, probID, roiName, idx, total, thresh, roiIndex, offset
             return newArray("quit", 0, 0);
         }
         
-        // Check if line was drawn
+        // Check if line was drawn on either image (raw or probability)
+        lineSource = -1;
         selectImage(rawID);
-        if (selectionType() != 5) {
+        if (selectionType() == 5) {
+            lineSource = rawID;
+        } else {
+            selectImage(probID);
+            if (selectionType() == 5) {
+                lineSource = probID;
+            }
+        }
+
+        if (lineSource == -1) {
+            // No line found on either image
             if (lineNum == 0) {
                 return newArray("skip", 0, 0);
             } else {
@@ -584,8 +611,9 @@ function analyzeROI(rawID, probID, roiName, idx, total, thresh, roiIndex, offset
                 return newArray("accept", totalCount, totalLineLen);
             }
         }
-        
-        // Get line coordinates
+
+        // Get line coordinates from whichever image has the line
+        selectImage(lineSource);
         getLine(lx1, ly1, lx2, ly2, lw);
         lineLen = sqrt(pow(lx2-lx1, 2) + pow(ly2-ly1, 2));
         
