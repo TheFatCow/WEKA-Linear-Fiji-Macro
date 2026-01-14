@@ -131,14 +131,4 @@ If you don't have a classifier yet:
 5. Iterate until segmentation looks good
 6. `Save classifier` to create your `.model` file
 
-## Citation
 
-If you use this tool in your research, please cite appropriately.
-
-## License
-
-MIT License - feel free to use and modify.
-
-## Contributing
-
-Issues and pull requests welcome!
